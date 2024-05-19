@@ -1,0 +1,5 @@
+.dragImg {
+  position: absolute;
+  width: 200px;
+  cursor: pointer;
+}

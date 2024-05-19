@@ -1,0 +1,56 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.editorContainer {
+  height: 500px;
+  width: 357px;
+  border: 5px solid black;
+  position: relative;
+  overflow: hidden;
+}
+
+.textContainer {
+  position: absolute;
+  bottom: 100px;
+  text-align: center;
+  margin: 0 5px;
+}
+
+.title {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-size: 30px;
+}
+
+.description {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+}
+
+.backgroundImg {
+  height: 500px;
+}
+
+.fg1 {
+  position: absolute;
+  width: 150px;
+  bottom: 0;
+  right: 0;
+}
+.fg1 {
+  position: absolute;
+  width: 150px;
+  bottom: 0;
+  right: 0;
+}
+.fg2 {
+  position: absolute;
+  width: 100px;
+  top: 0;
+  left: 0;
+}
