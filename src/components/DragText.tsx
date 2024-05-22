@@ -4,31 +4,33 @@ import styles from "./DragFG.module.css";
 interface DraggableItemProps {
   position?: { x: number; y: number };
   bounds?: string;
-  image: string;
-  width?: number;
-  zIndex?: number;
+  title: string;
+  description: string;
   onStop?: DraggableEventHandler;
 }
 
-const DragFG: React.FC<DraggableItemProps> = ({
+const DragText: React.FC<DraggableItemProps> = ({
   position,
   bounds,
-  image,
-  width,
-  zIndex,
+  title,
+  description,
   onStop,
 }) => {
   return (
     <>
       <Draggable position={position} bounds={bounds} onStop={onStop}>
-        <img
+        {/* <img
           src={image}
           className={styles.dragImg}
           style={{ width: `${width}px`, zIndex: zIndex }}
-        />
+        /> */}
+        <div className={styles.textContainer}>
+          <h2 className={styles.title}>{title}</h2>
+          <p className={styles.description}>{description}</p>
+        </div>
       </Draggable>
     </>
   );
 };
 
-export default DragFG;
+export default DragText;

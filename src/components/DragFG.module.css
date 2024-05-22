@@ -3,3 +3,24 @@
   width: 200px;
   cursor: pointer;
 }
+
+.textContainer {
+  position: absolute;
+  bottom: 100px;
+  text-align: center;
+  margin: 0 5px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.title {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-size: 30px;
+}
+
+.description {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+}

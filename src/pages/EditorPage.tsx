@@ -4,16 +4,27 @@ import styles from "./EditorPage.module.css";
 // import fg2 from "../assets/fg2.png";
 import DragFG from "../components/DragFG";
 import { DraggableData, DraggableEvent } from "react-draggable";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import DragText from "../components/DragText";
 
 const EditorPage: React.FC = () => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [background, setBackground] = useState<string>("");
 
-  const [image, setImage] = useState<string>("");
-  const [imageWidth, setImageWidth] = useState<number>(200);
-  const [imageZIdx, setImageZIdx] = useState<number>(0);
+  const [text, setText] = useState<{
+    title: string;
+    description: string;
+    position: { x: number; y: number };
+  }>({ title: "", description: "", position: { x: 50, y: 50 } });
+
+  const [image, setImage] = useState<{
+    image: string;
+    width: number;
+    position: { x: number; y: number };
+    zIndex: number;
+  }>({ image: "", width: 200, position: { x: 50, y: 50 }, zIndex: 0 });
 
   const [foreground, setForeground] = useState<
     {
@@ -65,7 +76,10 @@ const EditorPage: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string);
+        // setImage(reader.result as string);
+        setImage((prev) =>
+          prev ? { ...prev, image: reader.result as string } : prev
+        );
       };
       reader.readAsDataURL(file);
     }
@@ -83,19 +97,53 @@ const EditorPage: React.FC = () => {
   };
 
   const addTitleHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target?.value);
+    setText((prev) => (prev ? { ...prev, title: e.target?.value } : prev));
   };
 
   const addDescriptionHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDescription(e.target?.value);
+    setText((prev) =>
+      prev ? { ...prev, description: e.target?.value } : prev
+    );
   };
 
+  // UPDATE POSITION WHILE DRAGGING
   const handleStop = (id: number, e: DraggableEvent, data: DraggableData) => {
     setForeground((prevForeground) =>
       prevForeground.map((fg) =>
         fg.id === id ? { ...fg, position: { x: data.x, y: data.y } } : fg
       )
     );
+  };
+
+  const handleImageStop = (e: DraggableEvent, data: DraggableData) => {
+    setImage((prev) =>
+      prev ? { ...prev, position: { x: data.x, y: data.y } } : prev
+    );
+  };
+
+  const handleTextStop = (e: DraggableEvent, data: DraggableData) => {
+    setText((prev) =>
+      prev ? { ...prev, position: { x: data.x, y: data.y } } : prev
+    );
+  };
+
+  // DOWNLOAD AS IMAGE
+  const editorRef = useRef<HTMLDivElement>(null);
+  const handleDownloadImage = async () => {
+    if (editorRef.current === null) {
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(editorRef.current);
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "editor-image.png";
+      link.click();
+    } catch (error) {
+      console.error("Could not convert to image", error);
+    }
   };
 
   //   const title = "TAKE YOUR SKILL TO THE NEXT LEVEL";
@@ -116,13 +164,35 @@ const EditorPage: React.FC = () => {
           <input
             type="number"
             placeholder="Image Width"
-            onChange={(e) => setImageWidth(parseInt(e.target.value))}
+            // onChange={(e) => setImageWidth(parseInt(e.target.value))}
+            onChange={(e) =>
+              setImage((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      width: parseInt(e.target.value),
+                    }
+                  : prev
+              )
+            }
           />
-          {image && imageZIdx === 0 && (
-            <button onClick={() => setImageZIdx(1)}>Bring to Front</button>
+          {image && image.zIndex === 0 && (
+            <button
+              onClick={() =>
+                setImage((prev) => (prev ? { ...prev, zIndex: 1 } : prev))
+              }
+            >
+              Bring to Front
+            </button>
           )}
-          {imageZIdx === 1 && (
-            <button onClick={() => setImageZIdx(0)}>Bring to Back</button>
+          {image && image.zIndex === 1 && (
+            <button
+              onClick={() =>
+                setImage((prev) => (prev ? { ...prev, zIndex: 0 } : prev))
+              }
+            >
+              Bring to Back
+            </button>
           )}
 
           <button onClick={addForegroundHandler}>Add FG</button>
@@ -156,18 +226,23 @@ const EditorPage: React.FC = () => {
           ))}
         </div>
 
-        <div className={styles.editorContainer} id="editorContainer">
+        <div
+          ref={editorRef}
+          className={styles.editorContainer}
+          id="editorContainer"
+        >
           <DragFG
-            defaultPosition={{ x: 50, y: 50 }}
+            position={image.position}
             bounds="#editorContainer"
-            image={image}
-            width={imageWidth}
-            zIndex={imageZIdx}
+            image={image.image}
+            width={image.width}
+            zIndex={image.zIndex}
+            onStop={(e, data) => handleImageStop(e, data)}
           />
           {foreground.map((item, i) => (
             <DragFG
               key={i}
-              defaultPosition={item.position}
+              position={item.position}
               bounds="#editorContainer"
               image={item.image}
               width={item.width}
@@ -175,13 +250,19 @@ const EditorPage: React.FC = () => {
             />
           ))}
           <img src={background} className={styles.backgroundImg} />
-          {/* <img src={fg1} className={styles.fg1} /> */}
-          {/* <img src={fg2} className={styles.fg2} /> */}
-          <div className={styles.textContainer}>
+          {/* <div className={styles.textContainer}>
             <h2 className={styles.title}>{title}</h2>
             <p className={styles.description}>{description}</p>
-          </div>
+          </div> */}
+          <DragText
+            position={text.position}
+            bounds="#editorContainer"
+            title={text.title}
+            description={text.description}
+            onStop={(e, data) => handleTextStop(e, data)}
+          />
         </div>
+        <button onClick={handleDownloadImage}>Download as Image</button>
       </div>
     </>
   );
