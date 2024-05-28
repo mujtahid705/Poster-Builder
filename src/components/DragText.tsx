@@ -5,7 +5,10 @@ interface DraggableItemProps {
   position?: { x: number; y: number };
   bounds?: string;
   title: string;
+  titleFontSize: string;
   description: string;
+  descriptionFontSize: string;
+  color: string;
   onStop?: DraggableEventHandler;
 }
 
@@ -14,19 +17,24 @@ const DragText: React.FC<DraggableItemProps> = ({
   bounds,
   title,
   description,
+  titleFontSize,
+  descriptionFontSize,
+  color,
   onStop,
 }) => {
   return (
     <>
       <Draggable position={position} bounds={bounds} onStop={onStop}>
-        {/* <img
-          src={image}
-          className={styles.dragImg}
-          style={{ width: `${width}px`, zIndex: zIndex }}
-        /> */}
-        <div className={styles.textContainer}>
-          <h2 className={styles.title}>{title}</h2>
-          <p className={styles.description}>{description}</p>
+        <div className={styles.textContainer} style={{ color: color }}>
+          <h2 className={styles.title} style={{ fontSize: titleFontSize }}>
+            {title}
+          </h2>
+          <p
+            className={styles.description}
+            style={{ fontSize: descriptionFontSize }}
+          >
+            {description}
+          </p>
         </div>
       </Draggable>
     </>

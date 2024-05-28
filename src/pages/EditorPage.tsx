@@ -1,23 +1,55 @@
 import styles from "./EditorPage.module.css";
-// import background from "../assets/poster_bg.png";
-// import fg1 from "../assets/fg1.png";
-// import fg2 from "../assets/fg2.png";
 import DragFG from "../components/DragFG";
-import { DraggableData, DraggableEvent } from "react-draggable";
-import { useRef, useState } from "react";
-import html2canvas from "html2canvas";
 import DragText from "../components/DragText";
 
+import { DraggableData, DraggableEvent } from "react-draggable";
+import html2canvas from "html2canvas";
+
+import { useRef, useState } from "react";
+
+// ANT DESIGN
+import {
+  Button,
+  Cascader,
+  Checkbox,
+  ColorPicker,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Radio,
+  Select,
+  Slider,
+  Switch,
+  TreeSelect,
+  Upload,
+  Segmented,
+  ColorPickerProps,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { UploadChangeParam } from "antd/es/upload";
+import { RcFile } from "antd/es/upload/interface";
+
+const { TextArea } = Input;
+
 const EditorPage: React.FC = () => {
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
   const [background, setBackground] = useState<string>("");
 
   const [text, setText] = useState<{
     title: string;
+    titleFontSize: string;
     description: string;
+    descriptionFontSize: string;
+    color: string;
     position: { x: number; y: number };
-  }>({ title: "", description: "", position: { x: 50, y: 50 } });
+  }>({
+    title: "",
+    description: "",
+    position: { x: 50, y: 50 },
+    titleFontSize: "30px",
+    descriptionFontSize: "14px",
+    color: "#000000",
+  });
 
   const [image, setImage] = useState<{
     image: string;
@@ -37,18 +69,19 @@ const EditorPage: React.FC = () => {
   const [foregroundList, setForegroundList] = useState<number[]>([]);
   const [foregroundCounter, setForgroundCounter] = useState<number>(0);
 
-  console.log(foreground);
+  const [editorHeight, setEditorHeight] = useState<string>("500px");
+  const [editorWidth, setEditorWidth] = useState<string>("357px");
+  const [customHW, setCustomHW] = useState<boolean>(false);
 
+  // FORGEROUND PROPS
   const addForegroundHandler = () => {
     setForegroundList((prev) => [...prev, foregroundCounter]);
     setForgroundCounter((prev) => prev + 1);
   };
 
-  const foregroundImgHandler = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    id: number
-  ) => {
-    const file = e.target.files?.[0];
+  const foregroundImgHandler = (info: UploadChangeParam, id: number) => {
+    if (info.fileList.length === 0) return;
+    const file = (info.file.originFileObj as RcFile) || info.file;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -71,12 +104,13 @@ const EditorPage: React.FC = () => {
     setForegroundList((prev) => prev.filter((item) => item !== idx));
   };
 
-  const addimageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // ADD IMAGE, BACKGROUND, TITLE, DESCRIPTION
+  const addImageHandler = (info: UploadChangeParam) => {
+    if (info.fileList.length === 0) return;
+    const file = (info.file.originFileObj as RcFile) || info.file;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        // setImage(reader.result as string);
         setImage((prev) =>
           prev ? { ...prev, image: reader.result as string } : prev
         );
@@ -85,8 +119,13 @@ const EditorPage: React.FC = () => {
     }
   };
 
-  const addBackgroundHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageRemove = () => {
+    setImage((prev) => ({ ...prev, image: "" }));
+  };
+
+  const addBackgroundHandler = (info: UploadChangeParam) => {
+    if (info.fileList.length === 0) return;
+    const file = (info.file.originFileObj as RcFile) || info.file;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -96,11 +135,15 @@ const EditorPage: React.FC = () => {
     }
   };
 
+  const handleBackgroundRemove = () => {
+    setBackground("");
+  };
+
   const addTitleHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText((prev) => (prev ? { ...prev, title: e.target?.value } : prev));
   };
 
-  const addDescriptionHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const addDescriptionHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText((prev) =>
       prev ? { ...prev, description: e.target?.value } : prev
     );
@@ -139,130 +182,295 @@ const EditorPage: React.FC = () => {
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = "editor-image.png";
+      link.download = "poster-maker.png";
       link.click();
     } catch (error) {
       console.error("Could not convert to image", error);
     }
   };
 
-  //   const title = "TAKE YOUR SKILL TO THE NEXT LEVEL";
-  //   const description =
-  // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas elementum eleifend ex, hendrerit volutpat purus facilisis a.";
+  // COLOR PICKER
+  const handleColorChange: ColorPickerProps["onChange"] = (color) => {
+    setText((prev) => ({ ...prev, color: color.toHexString() }));
+  };
+
   return (
     <>
       <div className={styles.container}>
+        {/* FORM */}
         <div className={styles.editorForm}>
-          <input type="text" placeholder="Title" onChange={addTitleHandler} />
-          <input
-            type="text"
-            placeholder="Description"
-            onChange={addDescriptionHandler}
-          />
-          <input type="file" accept="img/" onChange={addBackgroundHandler} />
-          <input type="file" accept="img/" onChange={addimageHandler} />
-          <input
-            type="number"
-            placeholder="Image Width"
-            // onChange={(e) => setImageWidth(parseInt(e.target.value))}
-            onChange={(e) =>
-              setImage((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      width: parseInt(e.target.value),
-                    }
-                  : prev
-              )
-            }
-          />
-          {image && image.zIndex === 0 && (
-            <button
-              onClick={() =>
-                setImage((prev) => (prev ? { ...prev, zIndex: 1 } : prev))
-              }
-            >
-              Bring to Front
-            </button>
-          )}
-          {image && image.zIndex === 1 && (
-            <button
-              onClick={() =>
-                setImage((prev) => (prev ? { ...prev, zIndex: 0 } : prev))
-              }
-            >
-              Bring to Back
-            </button>
-          )}
+          <Form
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 14 }}
+            layout="vertical"
+            style={{ maxWidth: 600 }}
+          >
+            <Segmented<string>
+              options={["Vertical", "Horizontal", "Square", "Custom"]}
+              onChange={(value) => {
+                if (value === "Vertical") {
+                  setEditorHeight("500px");
+                  setEditorWidth("357px");
+                  setCustomHW(false);
+                }
 
-          <button onClick={addForegroundHandler}>Add FG</button>
-          {foregroundList.map((item) => (
-            <>
-              <div className={styles.foregroundInputContainer}>
-                <input
-                  key={item}
-                  type="file"
-                  accept="img/"
-                  onChange={(e) => foregroundImgHandler(e, item)}
-                />
-                <input
-                  type="number"
-                  placeholder="FG Width"
-                  onChange={(e) => {
-                    setForeground((prev) =>
-                      prev.map((el) =>
-                        el.id === item
-                          ? { ...el, width: parseInt(e.target.value) }
-                          : el
+                if (value === "Horizontal") {
+                  setEditorHeight("357px");
+                  setEditorWidth("500px");
+                  setCustomHW(false);
+                }
+
+                if (value === "Square") {
+                  setEditorHeight("500px");
+                  setEditorWidth("500px");
+                  setCustomHW(false);
+                }
+
+                if (value === "Custom") {
+                  setCustomHW(true);
+                }
+              }}
+            />
+
+            {/* CUSTOM CANVAS SIZE */}
+            {customHW && (
+              <>
+                <Form.Item label="Height">
+                  <Input
+                    onChange={(e) => setEditorHeight(`${e.target.value}px`)}
+                  />
+                </Form.Item>
+                <Form.Item label="Width">
+                  <Input
+                    onChange={(e) => setEditorWidth(`${e.target.value}px`)}
+                  />
+                </Form.Item>
+              </>
+            )}
+
+            <Form.Item label="Title">
+              <Input onChange={addTitleHandler} />
+            </Form.Item>
+
+            <Form.Item label="Title Font Size">
+              <Input
+                type="number"
+                defaultValue={30}
+                onChange={(e) =>
+                  setText((prev) => ({
+                    ...prev,
+                    titleFontSize: `${e.target.value}px`,
+                  }))
+                }
+              />
+            </Form.Item>
+
+            <Form.Item label="Description">
+              <TextArea rows={4} onChange={addDescriptionHandler} />
+            </Form.Item>
+
+            <Form.Item label="Description Font Size">
+              <Input
+                type="number"
+                defaultValue={14}
+                onChange={(e) =>
+                  setText((prev) => ({
+                    ...prev,
+                    descriptionFontSize: `${e.target.value}px`,
+                  }))
+                }
+              />
+            </Form.Item>
+
+            <Form.Item label="Text Color">
+              <ColorPicker
+                defaultValue={"#000000"}
+                onChange={handleColorChange}
+              />
+            </Form.Item>
+
+            <Form.Item label="Background" valuePropName="file">
+              <Upload
+                listType="picture-card"
+                maxCount={1}
+                onChange={addBackgroundHandler}
+                onRemove={handleBackgroundRemove}
+                beforeUpload={() => false}
+                showUploadList={{
+                  showPreviewIcon: false,
+                  showRemoveIcon: true,
+                }}
+              >
+                <button style={{ border: 0, background: "none" }} type="button">
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </button>
+              </Upload>
+            </Form.Item>
+
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Form.Item
+                label="Image"
+                valuePropName="file"
+                style={{ width: "100%" }}
+              >
+                <Upload
+                  listType="picture-card"
+                  maxCount={1}
+                  showUploadList={{
+                    showPreviewIcon: false,
+                    showRemoveIcon: true,
+                  }}
+                  onChange={addImageHandler}
+                  onRemove={handleImageRemove}
+                  beforeUpload={() => false}
+                >
+                  <button
+                    style={{ border: 0, background: "none" }}
+                    type="button"
+                  >
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Upload</div>
+                  </button>
+                </Upload>
+              </Form.Item>
+
+              <div>
+                <Form.Item label="Width" style={{ width: "110%" }}>
+                  <Input
+                    defaultValue={image.width}
+                    placeholder="Width"
+                    onChange={(e) =>
+                      setImage((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              width: parseInt(e.target.value),
+                            }
+                          : prev
                       )
-                    );
+                    }
+                  />
+                </Form.Item>
+
+                <Segmented<string>
+                  options={["Send to Back", "Bring to Front"]}
+                  onChange={(value) => {
+                    console.log(value);
+                    if (value === "Bring to Front")
+                      setImage((prev) =>
+                        prev ? { ...prev, zIndex: 1 } : prev
+                      );
+                    if (value === "Send to Back")
+                      setImage((prev) =>
+                        prev ? { ...prev, zIndex: 0 } : prev
+                      );
                   }}
                 />
-                <button onClick={() => deleteForegroundImg(item)}>
-                  Delete
-                </button>
+              </div>
+            </div>
+          </Form>
+
+          <Button onClick={addForegroundHandler} type="primary" ghost>
+            Add Props
+          </Button>
+          {foregroundList.map((item) => (
+            <>
+              <div key={item} className={styles.foregroundInputContainer}>
+                <Upload
+                  listType="picture-card"
+                  maxCount={1}
+                  showUploadList={{
+                    showPreviewIcon: false,
+                    showRemoveIcon: false,
+                  }}
+                  onChange={(info) => foregroundImgHandler(info, item)}
+                  beforeUpload={() => false}
+                >
+                  <button
+                    style={{ border: 0, background: "none" }}
+                    type="button"
+                  >
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Upload</div>
+                  </button>
+                </Upload>
+                <div>
+                  <Input
+                    placeholder="Width"
+                    style={{ maxWidth: "150px", marginRight: "20px" }}
+                    onChange={(e) => {
+                      setForeground((prev) =>
+                        prev.map((el) =>
+                          el.id === item
+                            ? { ...el, width: parseInt(e.target.value) }
+                            : el
+                        )
+                      );
+                    }}
+                  />
+
+                  <Button
+                    onClick={() => deleteForegroundImg(item)}
+                    type="primary"
+                    danger
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
             </>
           ))}
         </div>
 
-        <div
-          ref={editorRef}
-          className={styles.editorContainer}
-          id="editorContainer"
-        >
-          <DragFG
-            position={image.position}
-            bounds="#editorContainer"
-            image={image.image}
-            width={image.width}
-            zIndex={image.zIndex}
-            onStop={(e, data) => handleImageStop(e, data)}
-          />
-          {foreground.map((item, i) => (
+        {/* EDITOR */}
+        <div className={styles.editorContainer}>
+          <div
+            ref={editorRef}
+            className={styles.editor}
+            id="editorContainer"
+            style={{ height: editorHeight, width: editorWidth }}
+          >
             <DragFG
-              key={i}
-              position={item.position}
+              position={image.position}
               bounds="#editorContainer"
-              image={item.image}
-              width={item.width}
-              onStop={(e, data) => handleStop(item.id, e, data)}
+              image={image.image}
+              width={image.width}
+              zIndex={image.zIndex}
+              onStop={(e, data) => handleImageStop(e, data)}
             />
-          ))}
-          <img src={background} className={styles.backgroundImg} />
-          {/* <div className={styles.textContainer}>
-            <h2 className={styles.title}>{title}</h2>
-            <p className={styles.description}>{description}</p>
-          </div> */}
-          <DragText
-            position={text.position}
-            bounds="#editorContainer"
-            title={text.title}
-            description={text.description}
-            onStop={(e, data) => handleTextStop(e, data)}
-          />
+            {foreground.map((item, i) => (
+              <DragFG
+                key={i}
+                position={item.position}
+                bounds="#editorContainer"
+                image={item.image}
+                width={item.width}
+                onStop={(e, data) => handleStop(item.id, e, data)}
+              />
+            ))}
+            {background !== "" && (
+              <img src={background} className={styles.backgroundImg} />
+            )}
+            <DragText
+              position={text.position}
+              bounds="#editorContainer"
+              title={text.title}
+              description={text.description}
+              titleFontSize={text.titleFontSize}
+              descriptionFontSize={text.descriptionFontSize}
+              color={text.color}
+              onStop={(e, data) => handleTextStop(e, data)}
+            />
+          </div>
+          <Button
+            type="primary"
+            onClick={handleDownloadImage}
+            style={{ margin: "10px 0" }}
+          >
+            Download as Image
+          </Button>
         </div>
-        <button onClick={handleDownloadImage}>Download as Image</button>
       </div>
     </>
   );
