@@ -6,33 +6,28 @@ import { DraggableData, DraggableEvent } from "react-draggable";
 import html2canvas from "html2canvas";
 
 import { useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
 // ANT DESIGN
 import {
   Button,
-  Cascader,
-  Checkbox,
   ColorPicker,
-  DatePicker,
   Form,
   Input,
-  InputNumber,
-  Radio,
-  Select,
-  Slider,
-  Switch,
-  TreeSelect,
   Upload,
   Segmented,
   ColorPickerProps,
+  message,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { UploadChangeParam } from "antd/es/upload";
 import { RcFile } from "antd/es/upload/interface";
+import { addTemplate, getId, selectTemplates } from "../redux/templateSlice";
 
 const { TextArea } = Input;
 
 const EditorPage: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [background, setBackground] = useState<string>("");
 
   const [text, setText] = useState<{
@@ -194,8 +189,33 @@ const EditorPage: React.FC = () => {
     setText((prev) => ({ ...prev, color: color.toHexString() }));
   };
 
+  // SAVE AS TEMPLATE
+  const [messageApi, contextHolder] = message.useMessage();
+  const showSuccessMsg = () => {
+    messageApi.open({
+      type: "success",
+      content: "Template Saved Successfully!",
+    });
+  };
+  const id = useAppSelector(getId);
+  const handleTemplateSave = () => {
+    const templateObj = {
+      id: id,
+      textSec: text,
+      imageSec: image,
+      foregroundSec: foreground,
+      editorHeight,
+      editorWidth,
+    };
+    dispatch(addTemplate(templateObj));
+    showSuccessMsg();
+  };
+  const templates = useAppSelector(selectTemplates);
+  console.log(templates);
+
   return (
     <>
+      {contextHolder}
       <div className={styles.container}>
         {/* FORM */}
         <div className={styles.editorForm}>
@@ -371,12 +391,9 @@ const EditorPage: React.FC = () => {
             </div>
           </Form>
 
-          <Button onClick={addForegroundHandler} type="primary" ghost>
-            Add Props
-          </Button>
-          {foregroundList.map((item) => (
+          {foregroundList.map((item, i) => (
             <>
-              <div key={item} className={styles.foregroundInputContainer}>
+              <div key={i} className={styles.foregroundInputContainer}>
                 <Upload
                   listType="picture-card"
                   maxCount={1}
@@ -421,6 +438,9 @@ const EditorPage: React.FC = () => {
               </div>
             </>
           ))}
+          <Button onClick={addForegroundHandler} type="primary" ghost>
+            Add Props
+          </Button>
         </div>
 
         {/* EDITOR */}
@@ -469,6 +489,13 @@ const EditorPage: React.FC = () => {
             style={{ margin: "10px 0" }}
           >
             Download as Image
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleTemplateSave}
+            style={{ margin: "10px 0" }}
+          >
+            Save as Template
           </Button>
         </div>
       </div>
