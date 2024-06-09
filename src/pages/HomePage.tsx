@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
+import Nav from "../components/Nav";
 
 const HomePage: React.FC = () => {
   return (
     <>
-      <Link to="/editor">
-        <button>EDITOR</button>
-      </Link>
+      <Nav active="home" />
     </>
   );
 };

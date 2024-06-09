@@ -23,6 +23,8 @@ import { PlusOutlined } from "@ant-design/icons";
 import { UploadChangeParam } from "antd/es/upload";
 import { RcFile } from "antd/es/upload/interface";
 import { addTemplate, getId, selectTemplates } from "../redux/templateSlice";
+import { Link } from "react-router-dom";
+import Nav from "../components/Nav";
 
 const { TextArea } = Input;
 
@@ -216,6 +218,8 @@ const EditorPage: React.FC = () => {
   return (
     <>
       {contextHolder}
+      <Nav active="editor" />
+
       <div className={styles.container}>
         {/* FORM */}
         <div className={styles.editorForm}>
